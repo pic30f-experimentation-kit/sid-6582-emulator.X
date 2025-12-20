@@ -1,0 +1,16 @@
+dist/
+build/
+debug/
+disassembly/
+queuelogs/
+.generated_files/
+nbproject/*.mk
+nbproject/*.bash
+nbproject/*.properties
+nbproject/private
+*.workspace
+*.pdsbak
+*.log
+*.log.inx
+.DS_Store
+.~lock*
