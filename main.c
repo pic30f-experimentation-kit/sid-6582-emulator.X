@@ -16,6 +16,8 @@ int main() {
     // Initialization of variables
     resetSidStatus();
     set_CONTROL_REG(TRIANGULAR);
+    set_PW_HI(0x08);
+    set_PW_LO(0x00);
     set_FREQ_HI(0x11);
     set_FREQ_LO(0x25);
             

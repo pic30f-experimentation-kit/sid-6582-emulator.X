@@ -2,7 +2,7 @@
 #define	PERIPHERAL_PWM_H
 
 // At selected pre-scaler and Fosc...
-#define PWM_PERIOD       236   // ... this is 8.00µs
+#define PWM_PERIOD       0xFF   // So duty cycle is exactly 8bits
 
 #ifndef __ASSEMBLER__
 /**
