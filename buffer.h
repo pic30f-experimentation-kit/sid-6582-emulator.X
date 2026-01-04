@@ -7,9 +7,8 @@
 #define VALUE_WHEN_EMPTY 0
 
 typedef struct {
-    int *in;
-    int *out;
-    int *limit;
+    int in;
+    int out;
     int buffer[BUFFER_SIZE];
 } Buffer;
 

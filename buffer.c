@@ -11,9 +11,8 @@
  * @return integer value 
  */
 void bufferInitialize(Buffer *buffer) {
-    buffer->in = buffer->buffer;
-    buffer->out = buffer->in;
-    buffer->limit = buffer->in + (BUFFER_SIZE - 1);
+    buffer->in = 0;
+    buffer->out = 0;
 }
 
 /**
@@ -43,11 +42,11 @@ bool bufferIsEmpty(Buffer *buffer) {
 void bufferWrite(Buffer *buffer, int data) {
     
     //Write value
-    *(buffer->in) = data;
+    buffer->buffer[buffer->in] = data;
     
     //Update control pointers 
-    if (buffer->in == buffer->limit) {
-        buffer->in = buffer->buffer;
+    if (buffer->in >= BUFFER_SIZE - 1) {
+        buffer->in = 0;
     }
     else {
         buffer->in++; 
@@ -63,20 +62,19 @@ void bufferWrite(Buffer *buffer, int data) {
  * @return integer value 
  */
 int bufferRead(Buffer *buffer) {
-    
-    int data = VALUE_WHEN_EMPTY;
 
-    if (!bufferIsEmpty(buffer)) {
-        
-        //Read Value
-        data = *(buffer->out);
-        
-        //Update control pointers
-        if (buffer->out == buffer-> limit) {
-            buffer->out = buffer->buffer;
-        } else {
-            buffer->out++;
-        }
+    if (bufferIsEmpty(buffer)) {
+        return VALUE_WHEN_EMPTY;
+    }
+
+    //Read Value
+    int data = buffer->buffer[buffer->out];
+
+    //Update control pointers
+    if (buffer->out >= BUFFER_SIZE - 1) {
+        buffer->out = 0;
+    } else {
+        buffer->out++;
     }
 
     return data;
@@ -90,19 +88,19 @@ int bufferRead(Buffer *buffer) {
 void test_can_write_and_read() {
     
     //Test values to read and write
-    int FirstValue  = 10;
-    int SecondValue = 20;
+    int firstValue  = 10;
+    int secondValue = 20;
     
     //Creation of the buffer
     Buffer buffer;
     bufferInitialize(&buffer);
     
     //Write to the buffer
-    bufferWrite(&buffer, FirstValue);
-    bufferWrite(&buffer, SecondValue);
+    bufferWrite(&buffer, firstValue);
+    bufferWrite(&buffer, secondValue);
     
-    assertEquals("BUFF_RE01", FirstValue, bufferRead(&buffer));
-    assertEquals("BUFF_RE02", SecondValue, bufferRead(&buffer));
+    assertEquals("BUFF_RE01", firstValue, bufferRead(&buffer));
+    assertEquals("BUFF_RE02", secondValue, bufferRead(&buffer));
 }
 
 /*
@@ -110,14 +108,14 @@ void test_can_write_and_read() {
  * has been added. (Reading faster than writing)
  */
 void test_buffer_is_empty() {
-    int FirstValue = 10;
+    int firstValue = 10;
     
     //Create buffer
     Buffer buffer;
     bufferInitialize (&buffer);
     
     //Write and Read a value
-    bufferWrite (&buffer,FirstValue);
+    bufferWrite (&buffer,firstValue);
     bufferRead(&buffer);
     
     //Read again with no new value written after last read
@@ -131,8 +129,8 @@ void test_buffer_is_empty() {
  */
 void test_buffer_is_circular() {
     
-    int Value = 0;
-    int TestValue = 40;
+    int value = 0;
+    int testValue = 40;
     
     //Create the buffer
     Buffer buffer;
@@ -140,19 +138,18 @@ void test_buffer_is_circular() {
     
     //Populate the buffer up to the last position
     for (int i = 0; i < BUFFER_SIZE; i++){
+        bufferWrite (&buffer, value);
+        value++;
         
-        bufferWrite (&buffer, Value);
-        
-        Value++;
         //Read the Written Value so as to advance "in pointer" 
         bufferRead (&buffer);
     }
     
     //Add one more value (that should be stored in the first position again)
-    bufferWrite (&buffer, TestValue);
+    bufferWrite (&buffer, testValue);
     
     //Check that it has been stored in the first position
-    assertEquals("BUFF_CIRC", TestValue, buffer.buffer[0]);
+    assertEquals("BUFF_CIRC", testValue, buffer.buffer[0]);
 }
 
 /*

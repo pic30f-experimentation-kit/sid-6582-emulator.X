@@ -132,13 +132,19 @@ typedef struct {
 
 uint8_t computeSid();
 
-void resetSidStatus();
+void sidInitialize();
 
 void set_FREQ_LO(uint8_t value);
 void set_FREQ_HI(uint8_t value);
 void set_PW_LO(uint8_t value);
 void set_PW_HI(uint8_t value);
 void set_CONTROL_REG(uint8_t value);
+
+uint8_t get_FREQ_LO();
+uint8_t get_FREQ_HI();
+uint8_t get_PW_LO();
+uint8_t get_PW_HI();
+uint8_t get_CONTROL_REG();
 
 #ifdef TEST
 void testSid();

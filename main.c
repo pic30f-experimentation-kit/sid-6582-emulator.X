@@ -1,7 +1,11 @@
 #include "peripheral-pwm.h"
+#include "peripheral-adc.h"
 #include "test.h"
 #include "buffer.h"
 #include "sid.h"
+#include "shared.h"
+#include "peripheral-ic.h"
+#include "sid-controller.h"
 
 #include <xc.h>
 
@@ -13,19 +17,24 @@
 #ifndef TEST
 
 int main() {
-    // Initialization of variables
-    resetSidStatus();
-    set_CONTROL_REG(TRIANGULAR);
-    set_PW_HI(0x08);
-    set_PW_LO(0x00);
-    set_FREQ_HI(0x11);
-    set_FREQ_LO(0x25);
-            
-    // Initialization of modules
+    // Initialize functions
+    sidInitialize();
+    sidControllerInitialize();
+
+    // Set CPU base level of interrupts:
+    CORCONbits.IPL3 = 0;    // Any interruption with level higher...
+    SRbits.IPL = 0;         // ... than 0 is serviced.
+
+    // Initialize peripherals
     initializePWM();
+    initializeADC();
+    initializeIC();
     
     // Forever...
     for(;;) {
+        while(bufferIsEmpty(&sharedBuffer));
+        int event = bufferRead(&sharedBuffer);
+        sidControllerProcessSharedEvent(event);
     }
 }
 
@@ -34,6 +43,7 @@ int main() {
     testInitialize();
     testBuffer();
     testSid();
+    testSidController();
     testReport();
     while(1);
 }

@@ -45,7 +45,7 @@ uint8_t computeNoiseSignal(SignalGenerator *signalGenerator) {
 }
 
 uint8_t computeTestSignal(SignalGenerator *signalGenerator) {
-    return (signalGenerator->properties.frecuency >> 8) & 0xFF;
+    return (signalGenerator->properties.frecuency >> (FN_BIT_SHIFTING + 8)) & 0xFF;
 }
 
 uint8_t computeSignal(SignalGenerator *signalGenerator) {
@@ -71,7 +71,7 @@ uint8_t computeChannel(SidChannel *sidChannel) {
 
 static SidChannel sidChannel;
 
-void resetSidStatus() {
+void sidInitialize() {
     sidChannel.signalGenerator.status.counter = 0;
     sidChannel.signalGenerator.status.noiseBitValue = 0;
     sidChannel.signalGenerator.status.noiseValue = 0;
@@ -88,6 +88,11 @@ void set_FREQ_LO(uint8_t value) {
     sidChannel.signalGenerator.properties.frecuency = frequency << FN_BIT_SHIFTING;
 }
 
+uint8_t get_FREQ_LO() {
+    uint32_t frequency = sidChannel.signalGenerator.properties.frecuency >> FN_BIT_SHIFTING;
+    return (uint8_t) frequency;
+}
+
 void set_FREQ_HI(uint8_t value) {
     uint32_t v = value;
     v <<= 8;
@@ -95,6 +100,12 @@ void set_FREQ_HI(uint8_t value) {
     frequency &= 0x00FF;
     frequency |= v;
     sidChannel.signalGenerator.properties.frecuency = frequency << FN_BIT_SHIFTING;
+}
+
+uint8_t get_FREQ_HI() {
+    uint32_t frequency = sidChannel.signalGenerator.properties.frecuency >> FN_BIT_SHIFTING;
+    frequency >>= 8;
+    return (uint8_t) frequency;
 }
 
 void set_PW_LO(uint8_t value) {
@@ -107,6 +118,12 @@ void set_PW_LO(uint8_t value) {
     sidChannel.signalGenerator.properties.pulseWidth = pulseWidth;
 }
 
+uint8_t get_PW_LO() {
+    uint32_t pulseWidth = sidChannel.signalGenerator.properties.pulseWidth >> 12;
+    pulseWidth &= 0xFF;
+    return (uint8_t) pulseWidth;
+}
+
 void set_PW_HI(uint8_t value) {
     uint32_t v = value;
     v <<= 20;
@@ -115,6 +132,12 @@ void set_PW_HI(uint8_t value) {
     pulseWidth &= 0x000FF000;
     pulseWidth |= v;
     sidChannel.signalGenerator.properties.pulseWidth = pulseWidth;
+}
+
+uint8_t get_PW_HI() {
+    uint32_t pulseWidth = sidChannel.signalGenerator.properties.pulseWidth >> 20;
+    pulseWidth &= 0x0F;
+    return (uint8_t) pulseWidth;
 }
 
 void set_CONTROL_REG(uint8_t value) {
@@ -135,6 +158,10 @@ void set_CONTROL_REG(uint8_t value) {
     }
 }
 
+uint8_t get_CONTROL_REG() {
+   return (uint8_t) sidChannel.signalGenerator.properties.functionType;
+}
+
 void set_ATACK_DECAY(uint8_t value) {
     // TODO
 }
@@ -142,33 +169,6 @@ void set_ATACK_DECAY(uint8_t value) {
 void set_SUSTAIN_RELEASE(uint8_t value) {
     // TODO
 }
-
-void set(SidRegister r, uint8_t value) {
-    switch(r) {
-        case FREQ_LO:
-            set_FREQ_LO(value);
-            break;
-        case FREQ_HI:
-            set_FREQ_HI(value);
-            break;
-        case PW_LO:
-            set_PW_LO(value);
-            break;
-        case PW_HI:
-            set_PW_HI(value);
-            break;
-        case CONTROL_REG:
-            set_CONTROL_REG(value);
-            break;
-        case ATACK_DECAY:
-            set_ATACK_DECAY(value);
-            break;
-        case SUSTAIN_RELEASE:
-            set_SUSTAIN_RELEASE(value);
-            break;
-    };
-}
-
 
 #ifdef TEST
 
@@ -211,30 +211,40 @@ void sid_can_set_the_frequency_using_registers() {
     actual = sidChannel.signalGenerator.properties.frecuency;
     actual >>= FN_BIT_SHIFTING;
     assertEqualULongs("SIR_FR1", 0xBBAA, actual);
+    assertEquals("SIR_FR1h", 0xBB, get_FREQ_HI());
+    assertEquals("SIR_FR1l", 0xAA, get_FREQ_LO());
 
     set_FREQ_HI(0x80);
     set_FREQ_LO(0xFF);
     actual = sidChannel.signalGenerator.properties.frecuency;
     actual >>= FN_BIT_SHIFTING;
     assertEqualULongs("SIR_FR2", 0x80FF, actual);
+    assertEquals("SIR_FR2h", 0x80, get_FREQ_HI());
+    assertEquals("SIR_FR2l", 0xFF, get_FREQ_LO());
 
     set_FREQ_HI(0xFF);
     set_FREQ_LO(0x10);
     actual = sidChannel.signalGenerator.properties.frecuency;
     actual >>= FN_BIT_SHIFTING;
     assertEqualULongs("SIR_FR3", 0xFF10, actual);
+    assertEquals("SIR_FR3h", 0xFF, get_FREQ_HI());
+    assertEquals("SIR_FR3l", 0x10, get_FREQ_LO());
 
     set_FREQ_HI(0x00);
     set_FREQ_LO(0x01);
     actual = sidChannel.signalGenerator.properties.frecuency;
     actual >>= FN_BIT_SHIFTING;
     assertEqualULongs("SIR_FR4", 0x0001, actual);
+    assertEquals("SIR_FR4h", 0x00, get_FREQ_HI());
+    assertEquals("SIR_FR4l", 0x01, get_FREQ_LO());
 
     set_FREQ_HI(0x01);
     set_FREQ_LO(0x00);
     actual = sidChannel.signalGenerator.properties.frecuency;
     actual >>= FN_BIT_SHIFTING;
     assertEqualULongs("SIR_FR5", 0x0100, actual);
+    assertEquals("SIR_FR5h", 0x01, get_FREQ_HI());
+    assertEquals("SIR_FR5l", 0x00, get_FREQ_LO());
 }
 
 void sid_can_set_the_pulse_width_using_registers() {
@@ -244,35 +254,46 @@ void sid_can_set_the_pulse_width_using_registers() {
     set_PW_LO(0xAA);
     actual = sidChannel.signalGenerator.properties.pulseWidth;
     assertEqualULongs("SIR_PW1", 0xBAA000, actual);
+    assertEquals("SIR_PW1h", 0x0B, get_PW_HI());
+    assertEquals("SIR_PW1l", 0xAA, get_PW_LO());
 
     set_PW_HI(0x08);
     set_PW_LO(0xFF);
     actual = sidChannel.signalGenerator.properties.pulseWidth;
     assertEqualULongs("SIR_PW2", 0x8FF000, actual);
+    assertEquals("SIR_PW2h", 0x08, get_PW_HI());
+    assertEquals("SIR_PW2l", 0xFF, get_PW_LO());
 
     set_PW_HI(0x0F);
     set_PW_LO(0x10);
     actual = sidChannel.signalGenerator.properties.pulseWidth;
     assertEqualULongs("SIR_PW3", 0xF10000, actual);
+    assertEquals("SIR_PW3h", 0x0F, get_PW_HI());
+    assertEquals("SIR_PW3l", 0x10, get_PW_LO());
 
     set_PW_HI(0x00);
     set_PW_LO(0x01);
     actual = sidChannel.signalGenerator.properties.pulseWidth;
     assertEqualULongs("SIR_PW4", 0x001000, actual);
+    assertEquals("SIR_PW4h", 0x00, get_PW_HI());
+    assertEquals("SIR_PW4l", 0x01, get_PW_LO());
 
     set_PW_HI(0x01);
     set_PW_LO(0x00);
     actual = sidChannel.signalGenerator.properties.pulseWidth;
     assertEqualULongs("SIR_PW5", 0x100000, actual);
+    assertEquals("SIR_PW5h", 0x01, get_PW_HI());
+    assertEquals("SIR_PW5l", 0x00, get_PW_LO());
 }
 
 void sid_can_compute_sawtooth_signal_using_registers() {
-    resetSidStatus();
+    sidInitialize();
     set_FREQ_LO(FREQUENCY_FOR_TEST & 0xFF);
     set_FREQ_HI(FREQUENCY_FOR_TEST >> 8);
     set_CONTROL_REG(SAWTOOTH);
+    assertEquals("SRSWT", SAWTOOTH, get_CONTROL_REG());
     
-    resetSidStatus();
+    sidInitialize();
     for(int n = 1; n <= 255; n++) {
         sprintf(testId, "SIRSWT_%03d", n);
         assertEquals(testId, n, computeSid());
@@ -307,10 +328,11 @@ void sid_can_compute_triangular_signal() {
 }
 
 void sid_can_compute_triangular_signal_using_registers() {
-    resetSidStatus();
+    sidInitialize();
     set_FREQ_LO(FREQUENCY_FOR_TEST & 0xFF);
     set_FREQ_HI(FREQUENCY_FOR_TEST >> 8);
     set_CONTROL_REG(TRIANGULAR);
+    assertEquals("SIRTR", TRIANGULAR, get_CONTROL_REG());
 
     int expected = 0;
     for(int n = 0; n < 127; n++) {
@@ -351,12 +373,13 @@ void sid_can_compute_pulse_signal() {
 }
 
 void sid_can_compute_pulse_signal_using_registers() {
-    resetSidStatus();
+    sidInitialize();
     set_FREQ_LO(FREQUENCY_FOR_TEST & 0xFF);
     set_FREQ_HI(FREQUENCY_FOR_TEST >> 8);
     set_PW_HI(0x08);
     set_PW_LO(0x00);
     set_CONTROL_REG(PULSE);
+    assertEquals("SIRPUL", PULSE, get_CONTROL_REG());
 
     for(int n = 0; n <= 127; n++) {
         sprintf(testId, "SIRPUL_%03d", n);
@@ -373,22 +396,18 @@ void sid_can_compute_pulse_signal_using_registers() {
 void sid_can_compute_test_signal() {
     SignalGenerator signalGenerator;
     signalGenerator.properties.functionType = XTEST;
-    signalGenerator.properties.frecuency = 0xAABBCC;
+    signalGenerator.properties.frecuency = 0xAABBCC << FN_BIT_SHIFTING;
 
-    assertEquals(testId, 0xBB, computeSignal(&signalGenerator));
+    assertEquals("SIDTST", 0xBB, computeSignal(&signalGenerator));
 }
 
 void sid_can_compute_test_signal_using_registers() {
-    resetSidStatus();
-    set_FREQ_LO(0xBB);
-    set_FREQ_HI(0xFF);
+    sidInitialize();
+    set_FREQ_LO(0xCC);
+    set_FREQ_HI(0xBB);
     set_CONTROL_REG(XTEST);
 
-    SignalGenerator signalGenerator;
-    signalGenerator.properties.functionType = XTEST;
-    signalGenerator.properties.frecuency = 0xAABBCC;
-
-    assertEquals(testId, 0xBB, computeSignal(&signalGenerator));
+    assertEquals("SIRTST", 0xBB, computeSid());
 }
 
 void sid_can_compute_noise_signal() {
@@ -414,7 +433,7 @@ void sid_can_compute_noise_signal() {
 }
 
 void sid_can_compute_noise_signal_using_registers() {
-    resetSidStatus();
+    sidInitialize();
     set_FREQ_LO(FREQUENCY_FOR_TEST & 0xFF);
     set_FREQ_HI(FREQUENCY_FOR_TEST >> 8);
     set_CONTROL_REG(NOISE);

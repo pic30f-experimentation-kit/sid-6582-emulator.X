@@ -9,6 +9,10 @@
       <itemPath>random.h</itemPath>
       <itemPath>sid.h</itemPath>
       <itemPath>test.h</itemPath>
+      <itemPath>shared.h</itemPath>
+      <itemPath>peripheral-adc.h</itemPath>
+      <itemPath>peripheral-ic.h</itemPath>
+      <itemPath>sid-controller.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -30,6 +34,10 @@
       <itemPath>random.c</itemPath>
       <itemPath>sid.c</itemPath>
       <itemPath>test.c</itemPath>
+      <itemPath>peripheral-adc.c</itemPath>
+      <itemPath>shared.c</itemPath>
+      <itemPath>peripheral-ic.c</itemPath>
+      <itemPath>sid-controller.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
@@ -40,7 +48,7 @@
         <targetDevice>dsPIC30F3013</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>PICkit3PlatformTool</platformTool>
+        <platformTool>Simulator</platformTool>
         <languageToolchain>XCDSC</languageToolchain>
         <languageToolchainVersion>3.30</languageToolchainVersion>
         <platform>4</platform>
